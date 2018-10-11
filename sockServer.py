@@ -10,6 +10,9 @@
 # A simple example of opening and then listening on multiple ports
 #
 
+# To do: 
+# - Resolve addresses to names and process ids
+#
 import argparse
 import select
 import signal
@@ -41,15 +44,15 @@ def sighandler(sig,frame):
 parser = argparse.ArgumentParser(description='Open a stream socket on multiple ports')
 parser.add_argument('start',        type=int, help='First port number to bind to')
 parser.add_argument('number',       type=int, help='Number of ports to open')
-parser.add_argument('timeout',      type=int, help='Duration in seconds to leave sockets open')
-parser.add_argument('--interface',            help='IP address asscociated with the interface', default='')
+parser.add_argument('--timeout',    type=int, help='Timeout (seconds) waiting on inactive sockets'          ,default=10)
+parser.add_argument('--interface',            help='IP address asscociated with the interface'              ,default='')
 arguments=parser.parse_args()
 st=arguments.start
-nu=arguments.number
+nu=arguments.number if(arguments.number>0) else 1
 to=arguments.timeout
 h=arguments.interface
-
-print( "Opening stream sockets on port numbers %d to %d waiting %d seconds" % (st,st+nu-1,to))
+stp=st+nu-1 if( nu > 0 ) else st+nu
+print( "Opening stream sockets on port numbers %d to %d" % (st,stp))
 
 l = []
 
@@ -62,8 +65,7 @@ signal.signal(signal.SIGINT, sighandler)
 #
 # Open and bind to the port numbers
 #
-for i in range(0,nu):
-    p = st + i
+for p in range(st,stp+1):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setblocking(0)
@@ -74,6 +76,10 @@ for i in range(0,nu):
     except socket.error:
         print( 'FAILED to open port %d' % (p))
 
+if( 0 == len(l) ) :
+    print( 'No open sockets' )
+    terminate()
+    sys.exit(0)
 #
 # Wait for the port numbers to do something interesting
 #
@@ -81,11 +87,13 @@ while 1:
     r,w,e = select.select( l,l,l, to )
     for s in r:
         me=s.getsockname()
-        connection,addr=s.accept()
-        rxbuf=connection.recv(4096)
-        bs= ":".join("{:02x}".format(ord(c)) for c in rxbuf)
-        print('RX [%s:%d->%s:%d] %s' % (addr[0],addr[1],me[0],me[1],bs))
-        #print('RX %s' % bs)
+        try:
+            connection,addr=s.accept()
+            rxbuf=connection.recv(4096)
+            bs= ":".join("{:02x}".format(ord(c)) for c in rxbuf)
+            print('RX [%s:%d->%s:%d] %s' % (addr[0],addr[1],me[0],me[1],bs))
+        except:
+            print('RX [%s:%d->%s:%d] Nothing to receive' % (addr[0],addr[1],me[0],me[1]))
 
 
 #
