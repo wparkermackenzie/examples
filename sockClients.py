@@ -2,7 +2,7 @@
 # sockClients.py
 # W Parker Mackenzie 2018
 #
-# Repo : https://github.com/wparkermackenzie/examples
+# Repo : https://github.com/wparkermackenzie/utilities
 # License : The Unlicense
 #
 # A simple example of a client sending to server with multiple ports

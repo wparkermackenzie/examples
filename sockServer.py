@@ -2,7 +2,7 @@
 # sockServer.py
 # W Parker Mackenzie 2018
 #
-# Repo : https://github.com/wparkermackenzie/examples
+# Repo : https://github.com/wparkermackenzie/utilities
 # License : The Unlicense
 #
 #
